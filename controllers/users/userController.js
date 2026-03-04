@@ -14,6 +14,7 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+
 export const editUserProfile = async (req, res) => {
   const { full_name, email, department, password } = req.body;
   const { employee_id } = req.user;
