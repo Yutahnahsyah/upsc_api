@@ -1,0 +1,65 @@
+import * as vendorService from '../services/vendorService.js';
+
+export const registerVendor = async (req, res) => {
+  const { full_name, username, password, stall_id } = req.body;
+
+  try {
+    const vendor = await vendorService.registerVendor(stall_id, full_name, username, password);
+
+    res.status(201).json({
+      message: `Account for "${full_name}" registered successfully!`,
+      vendor
+    });
+  } catch (error) {
+    // 1. Map Service Error Keys to User-Facing Messages
+    const errorMap = {
+      "INVALID_NAME": "Full name can only contain letters and spaces.",
+      "PASSWORD_LENGTH": "Password must be at least 6 characters long.",
+      "PASSWORD_WHITESPACE": "Password cannot contain spaces or tabs."
+    };
+
+    if (errorMap[error.message]) {
+      return res.status(400).json({ message: errorMap[error.message] });
+    }
+
+    // 2. Handle Database errors (Postgres codes)
+    if (error.code === '23505') {
+      return res.status(400).json({ message: `Username "${username}" is already taken` });
+    }
+    
+    if (error.code === '23503') {
+      return res.status(404).json({ message: `Stall ID #${stall_id} does not exist` });
+    }
+
+    res.status(500).json({ message: 'Registration failed: Internal server error' });
+  }
+};
+
+export const getAllVendors = async (req, res) => {
+  try {
+    const vendors = await vendorService.fetchVendors();
+    res.status(200).json(vendors);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch vendor directory' });
+  }
+};
+
+export const deleteVendor = async (req, res) => {
+  const { admin_id } = req.body;
+  try {
+    const deletedVendor = await vendorService.deleteVendor(admin_id);
+
+    if (!deletedVendor) {
+      return res.status(404).json({ message: 'Vendor account not found' });
+    }
+
+    const identifier = deletedVendor.username || `ID: ${admin_id}`;
+
+    res.status(200).json({
+      message: `Vendor "${identifier}" deleted successfully`,
+      deletedVendor
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error: Could not delete vendor' });
+  }
+};
