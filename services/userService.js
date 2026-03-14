@@ -18,6 +18,11 @@ export const registerUser = async (userData) => {
 
 export const fetchUsers = async () => await User.findAll();
 
+export const fetchUserByEmail = async (email) => {
+  // If you are using a custom SQL model:
+  return await User.findByEmail(email); 
+};
+
 export const fetchProfile = async (id) => await User.findById(id);
 
 export const editUser = async (id, updateData) => {

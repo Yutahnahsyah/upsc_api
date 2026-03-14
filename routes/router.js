@@ -7,6 +7,7 @@ import * as userController from '../controllers/userController.js';
 import * as stallController from '../controllers/stallController.js';
 import * as vendorController from '../controllers/vendorController.js';
 import * as adminController from '../controllers/adminController.js';
+import * as menuController from '../controllers/menuController.js';
 
 const router = express.Router();
 
@@ -28,6 +29,12 @@ router.post('/createStall', authenticateToken, stallController.createStall);
 router.get('/allStalls', authenticateToken, stallController.getAllStalls);
 router.patch('/updateStallStatus', authenticateToken, stallController.updateStallStatus);
 router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
+
+// ===================== MENU ROUTES =====================
+router.get('/stallMenu/:stallId', authenticateToken, menuController.getStallMenu);
+router.post('/addItem', authenticateToken, upload.single('image'), menuController.addItem);
+router.patch('/updateItem/:id', upload.single('image'), menuController.updateMenuItem);
+router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuItem);
 
 // ==================== VENDOR ROUTES =====================
 router.post('/registerVendor', authenticateToken, vendorController.registerVendor);

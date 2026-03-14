@@ -11,7 +11,6 @@ export const registerVendor = async (req, res) => {
       vendor
     });
   } catch (error) {
-    // 1. Map Service Error Keys to User-Facing Messages
     const errorMap = {
       "INVALID_NAME": "Full name can only contain letters and spaces.",
       "PASSWORD_LENGTH": "Password must be at least 6 characters long.",
@@ -22,11 +21,10 @@ export const registerVendor = async (req, res) => {
       return res.status(400).json({ message: errorMap[error.message] });
     }
 
-    // 2. Handle Database errors (Postgres codes)
     if (error.code === '23505') {
       return res.status(400).json({ message: `Username "${username}" is already taken` });
     }
-    
+
     if (error.code === '23503') {
       return res.status(404).json({ message: `Stall ID #${stall_id} does not exist` });
     }

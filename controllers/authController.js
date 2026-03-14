@@ -6,9 +6,11 @@ import * as adminService from '../services/adminService.js';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const loginUser = async (req, res) => {
+  console.log("Login Attempt Body:", req.body);
   const { email, password } = req.body;
   try {
     const user = await userService.fetchUserByEmail(email);
+    console.log("DB User Object:", user);
     if (!user) return res.status(400).json({ message: 'Invalid Credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password_hash);

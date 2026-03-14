@@ -1,7 +1,6 @@
 import pool from '../config/db.js';
 
 const Admin = {
-  // Only the raw SQL insert
   create: async (full_name, username, password_hash) => {
     const result = await pool.query(
       `INSERT INTO admins (full_name, username, password_hash, role) 
