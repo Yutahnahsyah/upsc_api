@@ -24,6 +24,13 @@ const Stall = {
     return result.rows;
   },
 
+  findActive: async () => {
+    const result = await pool.query(
+      'SELECT stall_id, stall_name, location, stall_image_url FROM stalls WHERE is_active = true ORDER BY stall_name ASC'
+    );
+    return result.rows; 
+  },
+
   updateStatus: async (id, is_active) => {
     const result = await pool.query(
       "UPDATE stalls SET is_active = $1 WHERE stall_id = $2 RETURNING *",

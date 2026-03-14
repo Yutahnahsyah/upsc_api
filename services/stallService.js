@@ -34,3 +34,7 @@ export const deleteStall = async (stall_id) => {
 
   return await Stall.remove(stall_id);
 };
+
+export const getActiveStalls = async () => {
+  return await Stall.findActive();
+};

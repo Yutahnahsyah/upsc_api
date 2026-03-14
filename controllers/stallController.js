@@ -69,3 +69,12 @@ export const deleteStall = async (req, res) => {
     res.status(500).json({ message: "Deletion failed: Ensure no vendors are assigned to this stall" });
   }
 };
+
+export const getActiveStalls = async (req, res) => {
+  try {
+    const stalls = await stallService.getActiveStalls();
+    res.status(200).json(stalls);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to retrieve active stalls' });
+  }
+};
