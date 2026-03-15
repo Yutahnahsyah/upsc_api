@@ -8,6 +8,8 @@ import * as stallController from '../controllers/stallController.js';
 import * as vendorController from '../controllers/vendorController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as menuController from '../controllers/menuController.js';
+import * as orderController from '../controllers/orderController.js';
+import * as cartController from '../controllers/cartController.js';
 
 const router = express.Router();
 
@@ -35,6 +37,21 @@ router.get('/stallMenu/:stallId', authenticateToken, menuController.getStallMenu
 router.post('/addItem', authenticateToken, upload.single('image'), menuController.addItem);
 router.patch('/updateItem/:id', upload.single('image'), menuController.updateMenuItem);
 router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuItem);
+
+// ===================== CART ROUTES =====================
+// For students/staff to manage their current selection
+router.get('/myCart', authenticateToken, cartController.getUserCart);
+router.post('/addToCart', authenticateToken, cartController.addItemToCart);
+router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.removeItem);
+
+// ===================== ORDER ROUTES =====================
+// Vendor Side: View and Manage orders
+router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
+router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
+
+// User Side: Placing the order
+router.post('/placeOrder', authenticateToken, orderController.placeOrder);
+router.get('/myOrders', authenticateToken, orderController.getUserOrders);
 
 // ==================== VENDOR ROUTES =====================
 router.post('/registerVendor', authenticateToken, vendorController.registerVendor);

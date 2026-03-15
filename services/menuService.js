@@ -129,3 +129,6 @@ export const decrementStock = async (id, quantity) => {
 
   return await Menu.update(id, { stock_qty: item.stock_qty - quantity });
 };
+
+// Add this to the bottom of your menuService.js
+export const getMenuItemById = async (id) => Menu.findById(id);
