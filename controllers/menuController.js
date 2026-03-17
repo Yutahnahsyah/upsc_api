@@ -14,7 +14,6 @@ export const addItem = async (req, res) => {
       item
     });
   } catch (error) {
-    // Specific handling for empty fields
     if (error.message === "REQUIRED_FIELDS_MISSING") {
       return res.status(400).json({
         message: "Please fill in all required fields (Name, Category, and Price)."
@@ -40,7 +39,6 @@ export const updateMenuItem = async (req, res) => {
     const updated = await menuService.updateMenuItem(id, updates);
     if (!updated) return res.status(404).json({ message: "Item not found" });
 
-    // --- DYNAMIC MESSAGE LOGIC ---
     let successMessage = "Update successful";
 
     if (req.file) {
@@ -66,7 +64,6 @@ export const updateMenuItem = async (req, res) => {
       item: updated
     });
   } catch (error) {
-    // ... your existing error mapping logic
     const errorMessages = {
       "NAME_REQUIRED": "Item name cannot be empty.",
       "CATEGORY_REQUIRED": "Category cannot be empty.",
@@ -84,20 +81,17 @@ export const updateMenuItem = async (req, res) => {
 
 export const getStallMenu = async (req, res) => {
   const { stallId } = req.params;
-  if (req.user.role === 'vendor_admin' && req.user.stall_id != stallId) {
-    return res.status(403).json({ message: 'Unauthorized access to this stall menu' });
-  }
 
   try {
     const items = await menuService.getMenuByStall(stallId);
     res.status(200).json(items);
   } catch (error) {
+    console.error("Error retrieving menu items:", error);
     res.status(500).json({ message: 'Failed to retrieve menu items' });
   }
 };
 
 export const deleteMenuItem = async (req, res) => {
-  // Use req.params if the ID is in the URL (e.g., /api/menu/15)
   const { id } = req.params;
 
   try {
@@ -114,5 +108,16 @@ export const deleteMenuItem = async (req, res) => {
   } catch (error) {
     console.error("Delete Error:", error);
     res.status(500).json({ message: "Deletion failed: Internal server error" });
+  }
+};
+
+// ===================== NEW FUNCTION FOR FOOD SECTION =====================
+export const getAllItems = async (req, res) => {
+  try {
+    const items = await menuService.getAllItems();
+    res.status(200).json(items);
+  } catch (error) {
+    console.error("Error fetching all items:", error);
+    res.status(500).json({ message: 'Failed to fetch all menu items' });
   }
 };

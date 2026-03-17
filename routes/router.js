@@ -13,6 +13,7 @@ import * as cartController from '../controllers/cartController.js';
 
 const router = express.Router();
 
+
 // ===================== AUTH ROUTES =====================
 router.post('/loginUser', authController.loginUser);
 router.post('/loginAdmin', authController.loginAdmin);
@@ -31,9 +32,13 @@ router.post('/createStall', authenticateToken, stallController.createStall);
 router.get('/allStalls', authenticateToken, stallController.getAllStalls);
 router.patch('/updateStallStatus', authenticateToken, stallController.updateStallStatus);
 router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
+router.get('/stalls', stallController.getAllStalls);
+router.get('/stalls/active', stallController.getActiveStalls);
+router.get('/stallMenu/:stallId', menuController.getStallMenu);
 
 // ===================== MENU ROUTES =====================
-router.get('/stallMenu/:stallId', authenticateToken, menuController.getStallMenu);
+router.get('/stalls/:stallId/foods', menuController.getStallMenu); 
+router.get('/allMenuItems', menuController.getAllItems);
 router.post('/addItem', authenticateToken, upload.single('image'), menuController.addItem);
 router.patch('/updateItem/:id', upload.single('image'), menuController.updateMenuItem);
 router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuItem);
@@ -61,5 +66,6 @@ router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor)
 // ==================== ADMIN ROUTES =====================
 router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);
 router.get('/adminDashboard', authenticateToken, adminController.getAdminDashboard);
+
 
 export default router;

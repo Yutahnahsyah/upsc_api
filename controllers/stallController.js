@@ -26,8 +26,6 @@ export const createStall = async (req, res) => {
 export const getAllStalls = async (req, res) => {
   try {
     const stalls = await stallService.getStalls();
-    // Keep this as is, usually GET lists don't need a "Success" message 
-    // because the data itself is the success indicator.
     res.status(200).json(stalls);
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve stalls' });
@@ -77,4 +75,20 @@ export const getActiveStalls = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve active stalls' });
   }
+};
+
+export const getFoodsByStall = async (req, res) => {
+    const { id } = req.params; 
+    try {
+        const query = `
+            SELECT * FROM menu_items 
+            WHERE stall_id = $1 
+            AND is_available = true
+        `;
+        const result = await pool.query(query, [id]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching menu items:', err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 };
