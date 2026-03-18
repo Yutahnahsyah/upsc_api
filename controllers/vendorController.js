@@ -42,6 +42,22 @@ export const getAllVendors = async (req, res) => {
   }
 };
 
+export const getVendorStall = async (req, res) => {
+  try {
+    const adminId = req.user.admin_id || req.user.id;
+    const data = await vendorService.getVendorProfile(adminId);
+
+    if (!data) {
+      return res.status(404).json({ message: "Stall not found" });
+    }
+
+    res.status(200).json({ stall_name: data.stall_name });
+  } catch (error) {
+    console.error("Backend Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const deleteVendor = async (req, res) => {
   const { admin_id } = req.body;
   try {
@@ -59,5 +75,23 @@ export const deleteVendor = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error: Could not delete vendor' });
+  }
+};
+
+export const getVendorDashboard = async (req, res) => {
+  const stallId = req.user.stall_id;
+
+  if (!stallId) {
+    return res.status(403).json({ 
+      message: "Access Denied: You do not have an assigned stall." 
+    });
+  }
+
+  try {
+    const stats = await vendorService.getVendorDashboardStats(stallId);
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Dashboard Fetch Error:", error);
+    res.status(500).json({ message: "Failed to load dashboard statistics." });
   }
 };

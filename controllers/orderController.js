@@ -27,31 +27,22 @@ export const getStallOrders = async (req, res) => {
  * Handles success messages for frontend toast notifications.
  */
 export const updateOrderStatus = async (req, res) => {
-  // Destructure with the naming used in your React component
   const { orderId, status } = req.body;
 
-  // Log it to your terminal to verify what is arriving
-  console.log("Update Request Received:", { orderId, status });
-
-  if (!orderId || !status) {
-    return res.status(400).json({
-      message: "Order ID and status are required.",
-      received: { orderId, status }
-    });
-  }
-
   try {
-    // Inside controllers/orderController.js
     const updated = await orderService.updateStatus(Number(orderId), status);
-    if (!updated) return res.status(404).json({ message: "Order not found." });
-
     res.status(200).json({
-      message: "Status updated successfully!",
+      message: `Order #${orderId} updated to ${status}`,
       order: updated
     });
   } catch (error) {
-    console.error("Update Status Error:", error);
-    res.status(500).json({ message: "Internal server error during update." });
+    if (error.message === "INSUFFICIENT_STOCK") {
+      return res.status(400).json({
+        message: "Insufficient stock",
+        missing: error.details // This matches your frontend error: (err) => err.missing
+      });
+    }
+    res.status(500).json({ message: error.message || "Internal server error" });
   }
 };
 
@@ -60,6 +51,9 @@ export const updateOrderStatus = async (req, res) => {
 /**
  * Converts the current cart items into a formal order.
  * Snapshots prices/names to protect against future menu changes.
+ */
+/**
+ * Converts the current cart items into a formal order.
  */
 export const placeOrder = async (req, res) => {
   const { employee_id } = req.user;
@@ -76,17 +70,27 @@ export const placeOrder = async (req, res) => {
       order_remarks
     });
 
+    // --- SOCKET.IO TRIGGER ---
+    const io = req.app.get('socketio');
+    if (io) {
+      // Alert only the specific vendor room
+      io.to(`stall_${stall_id}`).emit('new_order_alert', {
+        message: "You have a new incoming order!",
+        orderId: newOrder.order_id,
+        customerName: req.user.full_name // Optional: if available in req.user
+      });
+    }
+    // -------------------------
+
     res.status(201).json({
       message: "Order placed successfully! Wait for vendor confirmation.",
       order: newOrder
     });
   } catch (error) {
     console.error("Place Order Error:", error);
-
     if (error.message === "EMPTY_CART") {
       return res.status(400).json({ message: "Your cart is empty for this stall." });
     }
-
     res.status(500).json({ message: "Failed to place order." });
   }
 };

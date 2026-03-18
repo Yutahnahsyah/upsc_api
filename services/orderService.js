@@ -10,24 +10,65 @@ export const updateStatus = async (orderId, newStatus) => {
   const currentOrder = await Order.findById(orderId);
   if (!currentOrder) throw new Error("ORDER_NOT_FOUND");
 
-  // Business Logic: Return Stock on Cancellation
-  // Inside services/orderService.js
-  if (newStatus === 'cancelled' && currentOrder.status !== 'cancelled') {
+  if (newStatus === 'preparing' && currentOrder.status === 'pending') {
     const items = await Order.findDetails(orderId);
-    await Promise.all(items.map(async (item) => {
-      try {
-        const menuItem = await menuService.getMenuItemById(item.item_id);
-        // ADD THIS CHECK: Only update if the item still exists in the menu
-        if (menuItem) {
-          await menuService.updateMenuItem(item.item_id, {
-            stock_qty: (menuItem.stock_qty || 0) + item.quantity
-          });
+
+    const aggregatedItems = items.reduce((acc, item) => {
+      acc[item.item_id] = {
+        name: item.item_name_snapshot,
+        quantity: (acc[item.item_id]?.quantity || 0) + item.quantity
+      };
+      return acc;
+    }, {});
+
+    const outOfStockDetails = []; // Changed from outOfStockItems
+
+    // Check all items before deducting anything
+    await Promise.all(
+      Object.entries(aggregatedItems).map(async ([itemId, data]) => {
+        const menuItem = await menuService.getMenuItemById(Number(itemId));
+        const currentStock = menuItem ? menuItem.stock_qty : 0;
+
+        if (currentStock < data.quantity) {
+          const missingCount = data.quantity - currentStock;
+          // Format: "Item Name (Need X more)"
+          outOfStockDetails.push(`${data.name} (Need ${missingCount} more)`);
         }
-      } catch (e) {
-        console.error(`Failed to restore stock for item ${item.item_id}:`, e);
-      }
-    }));
+      })
+    );
+
+    // If any items are missing, throw with the specific details
+    if (outOfStockDetails.length > 0) {
+      const err = new Error("INSUFFICIENT_STOCK");
+      err.details = outOfStockDetails; // This now contains the "Need X more" strings
+      throw err;
+    }
+
+    // If all clear, deduct the stock
+    await Promise.all(
+      Object.entries(aggregatedItems).map(async ([itemId, data]) => {
+        await menuService.decrementStock(Number(itemId), data.quantity);
+      })
+    );
   }
+
+  // Stock restoration logic (unchanged)
+  if (newStatus === 'cancelled' && currentOrder.status !== 'cancelled') {
+    if (['preparing', 'ready'].includes(currentOrder.status)) {
+      const items = await Order.findDetails(orderId);
+      await Promise.all(items.map(async (item) => {
+        try {
+          const menuItem = await menuService.getMenuItemById(item.item_id);
+          if (menuItem) {
+            await menuService.updateMenuItem(item.item_id, {
+              stock_qty: (menuItem.stock_qty || 0) + item.quantity
+            });
+          }
+        } catch (e) { console.error(e); }
+      }));
+    }
+  }
+
   return await Order.updateStatus(orderId, newStatus);
 };
 
@@ -36,7 +77,7 @@ export const createOrderFromCart = async (employeeId, orderData) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Fetch Cart Items (Business Logic: What is being bought?)
+    // 1. Fetch Cart Items
     const cartRes = await client.query(`
       SELECT ci.*, mi.item_name, mi.price, s.stall_name
       FROM cart_items ci
@@ -59,10 +100,7 @@ export const createOrderFromCart = async (employeeId, orderData) => {
       total_price: totalPrice
     }, items);
 
-    // 3. Update Inventory
-    for (const item of items) {
-      await client.query('UPDATE menu_items SET stock_qty = stock_qty - $1 WHERE item_id = $2', [item.quantity, item.item_id]);
-    }
+    // 3. REMOVED: Stock deduction logic (Now handled in updateStatus)
 
     // 4. Clear Cart
     await client.query(`
