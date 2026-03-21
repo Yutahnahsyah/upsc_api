@@ -1,11 +1,6 @@
 import * as stallService from '../services/stallService.js';
-import pool from '../config/db.js'; // Needed for getFoodsByStall
+import pool from '../config/db.js';
 
-// ===================== ADMIN/MANAGEMENT SIDE =====================
-
-/**
- * Creates a new stall entry.
- */
 export const createStall = async (req, res) => {
   const { stall_name, location } = req.body;
 
@@ -26,9 +21,6 @@ export const createStall = async (req, res) => {
   }
 };
 
-/**
- * Fetches all stalls (for admin directory).
- */
 export const getAllStalls = async (req, res) => {
   try {
     const stalls = await stallService.getStalls();
@@ -38,28 +30,22 @@ export const getAllStalls = async (req, res) => {
   }
 };
 
-/**
- * Toggles a stall's active status.
- */
 export const updateStallStatus = async (req, res) => {
   const { stall_id, is_active } = req.body;
   try {
     const updated = await stallService.updateStallStatus(stall_id, is_active);
     if (!updated) return res.status(404).json({ message: `Stall #${stall_id} not found` });
 
-    const statusText = is_active ? "Activated" : "Deactivated";
+    const statusText = is_active ? 'Restored' : 'Archived';  // 👈 changed
     res.status(200).json({
-      message: `Stall #${stall_id} has been ${statusText}`,
+      message: `Stall "${updated.stall_name}" has been ${statusText}`,  // 👈 changed
       stall: updated
     });
   } catch (error) {
-    res.status(500).json({ message: "Update failed: Internal server error" });
+    res.status(500).json({ message: 'Update failed: Internal server error' });
   }
 };
 
-/**
- * Removes a stall from the directory.
- */
 export const deleteStall = async (req, res) => {
   const { stall_id } = req.body;
   try {
@@ -78,11 +64,6 @@ export const deleteStall = async (req, res) => {
   }
 };
 
-// ===================== VENDOR/USER SIDE =====================
-
-/**
- * Fetches only stalls currently marked as active (for Student App).
- */
 export const getActiveStalls = async (req, res) => {
   try {
     const stalls = await stallService.getActiveStalls();
@@ -92,9 +73,6 @@ export const getActiveStalls = async (req, res) => {
   }
 };
 
-/**
- * Fetches menu items belonging to a specific stall.
- */
 export const getFoodsByStall = async (req, res) => {
     const { id } = req.params; 
     try {
@@ -111,9 +89,6 @@ export const getFoodsByStall = async (req, res) => {
     }
 };
 
-/**
- * Updates stall profile details and handles image uploads.
- */
 export const updateStallProfile = async (req, res) => {
   try {
     const { id } = req.params; 
@@ -123,9 +98,7 @@ export const updateStallProfile = async (req, res) => {
     if (stall_name) updates.stall_name = stall_name;
     if (location) updates.location = location;
 
-    // Save the image path if a file was uploaded
     if (req.file) {
-      // Formats path to work with your Constants.kt helper
       updates.stall_image_url = `/uploads/${req.file.filename}`;
     }
 
@@ -144,9 +117,6 @@ export const updateStallProfile = async (req, res) => {
   }
 };
 
-/**
- * Fetches details for a single stall.
- */
 export const getStallDetails = async (req, res) => {
   const { id } = req.params;
   try {

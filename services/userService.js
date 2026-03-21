@@ -19,8 +19,7 @@ export const registerUser = async (userData) => {
 export const fetchUsers = async () => await User.findAll();
 
 export const fetchUserByEmail = async (email) => {
-  // If you are using a custom SQL model:
-  return await User.findByEmail(email); 
+  return await User.findByEmail(email);
 };
 
 export const fetchProfile = async (id) => await User.findById(id);
@@ -60,3 +59,11 @@ export const editUser = async (id, updateData) => {
 export const updateAvatar = async (id, path) => await User.updateProfilePic(id, path);
 
 export const deleteUser = async (id) => await User.remove(id);
+
+export const toggleUserArchive = async (id, currentStatus) => {
+  const newStatus = !currentStatus;
+  const updatedUser = await User.updateStatus(id, newStatus);
+  
+  if (!updatedUser) throw { status: 404, message: 'User not found' };
+  return updatedUser;
+};

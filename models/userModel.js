@@ -9,7 +9,7 @@ const User = {
     );
     return result.rows[0];
   },
-  
+
   findById: async (id) => {
     const result = await pool.query(
       'SELECT employee_id, full_name, email, department, profile_picture_url FROM users WHERE employee_id = $1',
@@ -25,10 +25,10 @@ const User = {
     );
     return result.rows[0];
   },
-  
+
   findAll: async () => {
     const result = await pool.query(
-      'SELECT employee_id, full_name, email, department, created_at FROM users ORDER BY created_at DESC'
+      'SELECT employee_id, full_name, email, department, created_at, is_active FROM users ORDER BY created_at DESC'
     );
     return result.rows;
   },
@@ -42,6 +42,14 @@ const User = {
     const result = await pool.query(
       'UPDATE users SET profile_picture_url = $1 WHERE employee_id = $2 RETURNING employee_id, full_name, profile_picture_url',
       [imageUrl, id]
+    );
+    return result.rows[0];
+  },
+
+  updateStatus: async (id, isActive) => {
+    const result = await pool.query(
+      'UPDATE users SET is_active = $1 WHERE employee_id = $2 RETURNING employee_id, full_name, is_active',
+      [isActive, id]
     );
     return result.rows[0];
   },

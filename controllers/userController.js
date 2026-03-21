@@ -96,3 +96,17 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+export const archiveUser = async (req, res) => {
+  try {
+    const { employee_id, is_active } = req.body;
+    const updatedUser = await userService.toggleUserArchive(employee_id, is_active);
+
+    res.status(200).json({
+      message: updatedUser.is_active ? 'User restored successfully' : 'User archived successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message || 'Internal Server Error' });
+  }
+};

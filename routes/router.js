@@ -42,6 +42,7 @@ router.get('/getUser', authenticateToken, userController.getUserProfile);
 router.put('/editUser', authenticateToken, userController.editUserProfile);
 router.post('/uploadProfilePic', authenticateToken, upload.single('image'), userController.updateProfilePicture);
 router.delete('/deleteUser', authenticateToken, userController.deleteUser);
+router.patch('/archiveUser', authenticateToken, userController.archiveUser);
 
 // ===================== STALL ROUTES =====================
 router.post('/createStall', authenticateToken, stallController.createStall);
@@ -68,25 +69,9 @@ router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.r
 router.delete('/clearStallCart/:stallId', authenticateToken, cartController.clearStallCart);
 
 // ===================== ORDER ROUTES =====================
-/**
- * Vendor dashboard uses this to fetch its orders.
- */
 router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
-
-/**
- * Updates order status (pending, preparing, ready, completed, cancelled).
- */
 router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
-
-/**
- * Main Order Call from Android. 
- * Triggers the database save and Socket.io vendor alert.
- */
 router.post('/placeOrder', authenticateToken, orderController.placeOrder);
-
-/**
- * Fetches user history. Used for Profile Screen stats.
- */
 router.get('/myOrders', authenticateToken, orderController.getUserOrders);
 
 // ==================== VENDOR ROUTES =====================
@@ -97,6 +82,7 @@ router.get('/vendorStall', authenticateToken, vendorController.getVendorStall);
 router.get('/vendorDashboard', authenticateToken, vendorController.getVendorDashboard);
 router.patch('/changeVendorPassword', authenticateToken, vendorController.changeVendorPassword);
 router.put('/updateVendor/:admin_id', authenticateToken, vendorController.updateVendor);
+router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor);
 
 // ==================== ADMIN ROUTES =====================
 router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);

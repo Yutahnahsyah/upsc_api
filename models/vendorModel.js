@@ -27,6 +27,7 @@ const Vendor = {
     const result = await pool.query(`
     SELECT 
       a.admin_id,
+      a.full_name,
       a.is_active, 
       s.stall_name,
       s.location,

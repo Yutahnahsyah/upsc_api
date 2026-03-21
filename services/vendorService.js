@@ -137,3 +137,9 @@ export const updateVendor = async (adminId, updateData) => {
 
   return updatedVendor;
 };
+
+export const deleteVendor = async (adminId) => {
+  const deleted = await Vendor.remove(adminId);
+  if (!deleted) throw new Error('VENDOR_NOT_FOUND');
+  return deleted;
+};

@@ -172,3 +172,19 @@ export const updateVendor = async (req, res) => {
     res.status(500).json({ message: "Failed to update vendor information" });
   }
 };
+
+export const deleteVendor = async (req, res) => {
+  const { admin_id } = req.body;
+  try {
+    const deleted = await vendorService.deleteVendor(admin_id);
+    res.status(200).json({
+      message: `Vendor "${deleted.full_name}" deleted successfully`,
+      vendor: deleted
+    });
+  } catch (error) {
+    if (error.message === 'VENDOR_NOT_FOUND') {
+      return res.status(404).json({ message: 'Vendor not found' });
+    }
+    res.status(500).json({ message: 'Failed to delete vendor' });
+  }
+};
