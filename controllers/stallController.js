@@ -1,5 +1,11 @@
 import * as stallService from '../services/stallService.js';
+import pool from '../config/db.js'; // Needed for getFoodsByStall
 
+// ===================== ADMIN/MANAGEMENT SIDE =====================
+
+/**
+ * Creates a new stall entry.
+ */
 export const createStall = async (req, res) => {
   const { stall_name, location } = req.body;
 
@@ -11,18 +17,18 @@ export const createStall = async (req, res) => {
       stall
     });
   } catch (error) {
-    // Handle the logic error thrown by the Service
     if (error.message === "DUPLICATE_STALL_NAME") {
       return res.status(400).json({
         message: `The name "${stall_name}" is already taken. Please choose a different stall name.`
       });
     }
-
-    // Handle generic server errors
     res.status(500).json({ message: 'Server error: Could not create stall' });
   }
 };
 
+/**
+ * Fetches all stalls (for admin directory).
+ */
 export const getAllStalls = async (req, res) => {
   try {
     const stalls = await stallService.getStalls();
@@ -32,13 +38,15 @@ export const getAllStalls = async (req, res) => {
   }
 };
 
+/**
+ * Toggles a stall's active status.
+ */
 export const updateStallStatus = async (req, res) => {
   const { stall_id, is_active } = req.body;
   try {
     const updated = await stallService.updateStallStatus(stall_id, is_active);
     if (!updated) return res.status(404).json({ message: `Stall #${stall_id} not found` });
 
-    // Dynamic message showing the new state
     const statusText = is_active ? "Activated" : "Deactivated";
     res.status(200).json({
       message: `Stall #${stall_id} has been ${statusText}`,
@@ -49,13 +57,15 @@ export const updateStallStatus = async (req, res) => {
   }
 };
 
+/**
+ * Removes a stall from the directory.
+ */
 export const deleteStall = async (req, res) => {
   const { stall_id } = req.body;
   try {
     const deleted = await stallService.deleteStall(stall_id);
     if (!deleted) return res.status(404).json({ message: "Stall not found" });
 
-    // Improved message to confirm which ID was removed
     res.status(200).json({
       message: `Stall #${stall_id} removed from directory`,
       stall: deleted
@@ -68,6 +78,11 @@ export const deleteStall = async (req, res) => {
   }
 };
 
+// ===================== VENDOR/USER SIDE =====================
+
+/**
+ * Fetches only stalls currently marked as active (for Student App).
+ */
 export const getActiveStalls = async (req, res) => {
   try {
     const stalls = await stallService.getActiveStalls();
@@ -77,6 +92,9 @@ export const getActiveStalls = async (req, res) => {
   }
 };
 
+/**
+ * Fetches menu items belonging to a specific stall.
+ */
 export const getFoodsByStall = async (req, res) => {
     const { id } = req.params; 
     try {
@@ -93,19 +111,21 @@ export const getFoodsByStall = async (req, res) => {
     }
 };
 
+/**
+ * Updates stall profile details and handles image uploads.
+ */
 export const updateStallProfile = async (req, res) => {
   try {
     const { id } = req.params; 
     const { stall_name, location } = req.body;
 
-    // Prepare the update object
     const updates = {};
     if (stall_name) updates.stall_name = stall_name;
     if (location) updates.location = location;
 
-    // ADDED: Check if a new image was uploaded
+    // Save the image path if a file was uploaded
     if (req.file) {
-      // Save the path provided by your fileUpload utility
+      // Formats path to work with your Constants.kt helper
       updates.stall_image_url = `/uploads/${req.file.filename}`;
     }
 
@@ -124,6 +144,9 @@ export const updateStallProfile = async (req, res) => {
   }
 };
 
+/**
+ * Fetches details for a single stall.
+ */
 export const getStallDetails = async (req, res) => {
   const { id } = req.params;
   try {

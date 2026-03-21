@@ -13,6 +13,7 @@ import * as cartController from '../controllers/cartController.js';
 
 const router = express.Router();
 
+// Logging middleware to help you debug requests from the Android app
 router.use((req, res, next) => {
   const time = new Date().toLocaleTimeString();
   const method = req.method;
@@ -67,9 +68,25 @@ router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.r
 router.delete('/clearStallCart/:stallId', authenticateToken, cartController.clearStallCart);
 
 // ===================== ORDER ROUTES =====================
+/**
+ * Vendor dashboard uses this to fetch its orders.
+ */
 router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
+
+/**
+ * Updates order status (pending, preparing, ready, completed, cancelled).
+ */
 router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
+
+/**
+ * Main Order Call from Android. 
+ * Triggers the database save and Socket.io vendor alert.
+ */
 router.post('/placeOrder', authenticateToken, orderController.placeOrder);
+
+/**
+ * Fetches user history. Used for Profile Screen stats.
+ */
 router.get('/myOrders', authenticateToken, orderController.getUserOrders);
 
 // ==================== VENDOR ROUTES =====================
@@ -84,6 +101,5 @@ router.put('/updateVendor/:admin_id', authenticateToken, vendorController.update
 // ==================== ADMIN ROUTES =====================
 router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);
 router.get('/adminDashboard', authenticateToken, adminController.getAdminDashboard);
-
 
 export default router;

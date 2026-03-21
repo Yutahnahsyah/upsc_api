@@ -17,7 +17,6 @@ const Stall = {
     return result.rows[0];
   },
 
-  // Add this to your Stall object in stallModel.js
   findById: async (id) => {
     const result = await pool.query(
       'SELECT stall_id, stall_name, location, stall_image_url, is_active FROM stalls WHERE stall_id = $1',
@@ -28,14 +27,16 @@ const Stall = {
 
   findAll: async () => {
     const result = await pool.query(
-      'SELECT stall_id, stall_name, location, is_active FROM stalls ORDER BY stall_id DESC'
+      // FIXED: Added stall_image_url to the selection
+      'SELECT stall_id, stall_name, location, stall_image_url, is_active FROM stalls ORDER BY stall_id DESC'
     );
     return result.rows;
   },
 
   findActive: async () => {
     const result = await pool.query(
-      'SELECT stall_id, stall_name, location, stall_image_url FROM stalls WHERE is_active = true ORDER BY stall_name ASC'
+      // FIXED: Added is_active to the selection to match the Android Model
+      'SELECT stall_id, stall_name, location, stall_image_url, is_active FROM stalls WHERE is_active = true ORDER BY stall_name ASC'
     );
     return result.rows;
   },
@@ -53,7 +54,6 @@ const Stall = {
     return parseInt(result.rows[0].count);
   },
 
-  // Add this to your Stall object in stallModel.js
   update: async (id, updates) => {
     const keys = Object.keys(updates);
     const values = Object.values(updates);

@@ -1,7 +1,7 @@
 import pool from '../config/db.js';
 
 const Order = {
-  // Vendor View: Fetching raw columns as they exist in DB
+  // Vendor View: Uses LEFT JOIN to ensure orders show even if user profile is missing
   findByStall: async (stallId) => {
     const result = await pool.query(`
     SELECT o.*, 
@@ -12,7 +12,7 @@ const Order = {
         'price_at_order', od.price_at_order
       )) AS items
     FROM orders o
-    JOIN users u ON o.employee_id = u.employee_id
+    LEFT JOIN users u ON o.employee_id = u.employee_id
     LEFT JOIN order_details od ON o.order_id = od.order_id
     WHERE o.stall_id = $1
     GROUP BY o.order_id, u.full_name, u.department, o.order_time
@@ -54,26 +54,10 @@ const Order = {
     const result = await pool.query(`
     UPDATE orders 
     SET status = $1::order_status,
-        -- Set is_paid to true only when picked up
-        is_paid = CASE 
-            WHEN $1::order_status = 'picked_up' THEN TRUE 
-            ELSE is_paid 
-        END,
-        -- Record completion time
-        completed_at = CASE 
-            WHEN $1::order_status = 'picked_up' THEN CURRENT_TIMESTAMP 
-            ELSE completed_at 
-        END,
-        -- Record cancellation time
-        cancelled_at = CASE 
-            WHEN $1::order_status = 'cancelled' THEN CURRENT_TIMESTAMP 
-            ELSE cancelled_at 
-        END,
-        -- Record when vendor marked as ready
-        pickup_time = CASE 
-            WHEN $1::order_status = 'ready' THEN CURRENT_TIMESTAMP 
-            ELSE pickup_time 
-        END
+        is_paid = CASE WHEN $1::order_status = 'picked_up' THEN TRUE ELSE is_paid END,
+        completed_at = CASE WHEN $1::order_status = 'picked_up' THEN CURRENT_TIMESTAMP ELSE completed_at END,
+        cancelled_at = CASE WHEN $1::order_status = 'cancelled' THEN CURRENT_TIMESTAMP ELSE cancelled_at END,
+        pickup_time = CASE WHEN $1::order_status = 'ready' THEN CURRENT_TIMESTAMP ELSE pickup_time END
     WHERE order_id = $2 
     RETURNING *
   `, [status, orderId]);
