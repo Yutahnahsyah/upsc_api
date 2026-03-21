@@ -14,7 +14,18 @@ import * as cartController from '../controllers/cartController.js';
 const router = express.Router();
 
 router.use((req, res, next) => {
-  console.log(`[Incoming Request]: ${req.method} ${req.url}`);
+  const time = new Date().toLocaleTimeString();
+  const method = req.method;
+  const url = req.url;
+
+  console.log(`\n--- [${time}] ${method} ${url} ---`);
+
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log("Body:", JSON.stringify(req.body, null, 2));
+  } else if (method !== 'GET') {
+    console.log("Body: [Empty]");
+  }
+
   next();
 });
 
