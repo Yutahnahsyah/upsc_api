@@ -13,7 +13,6 @@ import * as cartController from '../controllers/cartController.js';
 
 const router = express.Router();
 
-// In your router.js file
 router.use((req, res, next) => {
   console.log(`[Incoming Request]: ${req.method} ${req.url}`);
   next();
@@ -40,35 +39,36 @@ router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
 router.get('/stalls', stallController.getAllStalls);
 router.get('/stalls/active', stallController.getActiveStalls);
 router.get('/stallMenu/:stallId', menuController.getStallMenu);
+router.patch('/stalls/update/:id', authenticateToken, upload.single('image'), stallController.updateStallProfile);
+router.put('/updateStallProfile/:id', authenticateToken, stallController.updateStallProfile);
 
 // ===================== MENU ROUTES =====================
 router.get('/stalls/:stallId/foods', menuController.getStallMenu);
 router.get('/allMenuItems', menuController.getAllItems);
 router.post('/addItem', authenticateToken, upload.single('image'), menuController.addItem);
-router.patch('/updateItem/:id', upload.single('image'), menuController.updateMenuItem);
+router.patch('/updateItem/:id', upload.single('image'), authenticateToken, menuController.updateMenuItem);
 router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuItem);
 
 // ===================== CART ROUTES =====================
-// This is perfectly mapped to the cartController.removeItem function we updated
 router.get('/myCart', authenticateToken, cartController.getUserCart);
 router.post('/addToCart', authenticateToken, cartController.addItemToCart);
 router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.removeItem);
+router.delete('/clearStallCart/:stallId', authenticateToken, cartController.clearStallCart);
 
 // ===================== ORDER ROUTES =====================
-// These will now correctly trigger the stock deduction ONLY when status changes
 router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
 router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
-
-// User Side: Placing the order
 router.post('/placeOrder', authenticateToken, orderController.placeOrder);
 router.get('/myOrders', authenticateToken, orderController.getUserOrders);
 
 // ==================== VENDOR ROUTES =====================
 router.post('/registerVendor', authenticateToken, vendorController.registerVendor);
 router.get('/allVendors', authenticateToken, vendorController.getAllVendors);
-router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor);
+router.delete('/archiveVendor', authenticateToken, vendorController.archiveVendor);
 router.get('/vendorStall', authenticateToken, vendorController.getVendorStall);
 router.get('/vendorDashboard', authenticateToken, vendorController.getVendorDashboard);
+router.patch('/changeVendorPassword', authenticateToken, vendorController.changeVendorPassword);
+router.put('/updateVendor/:admin_id', authenticateToken, vendorController.updateVendor);
 
 // ==================== ADMIN ROUTES =====================
 router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);

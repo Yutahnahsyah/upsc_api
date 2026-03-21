@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import router from './routes/router.js';
-// 1. Import these
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
@@ -28,7 +27,7 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:5174'
   ],
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -50,7 +49,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT} with WebSockets enabled`);

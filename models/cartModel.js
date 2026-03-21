@@ -51,9 +51,47 @@ const Cart = {
     return await pool.query('DELETE FROM cart_items WHERE cart_item_id = $1', [cartItemId]);
   },
 
-  clearCart: async (cartId) => {
-    return await pool.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
+clearCart: async (cartId, stallId = null) => {
+    if (stallId !== null && stallId !== undefined) {
+      // Improved query to ensure we are targeting the specific items
+      const query = `
+        DELETE FROM cart_items 
+        WHERE cart_id = $1 
+        AND item_id IN (
+          SELECT item_id 
+          FROM menu_items 
+          WHERE stall_id = $2
+        )
+      `;
+      return await pool.query(query, [cartId, stallId]);
+    } else {
+      return await pool.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
+    }
+  },
+
+  // FIXED: This now ensures stall_id and stall_name are returned to the Android app
+  viewCart: async (employeeId) => {
+    const cart = await Cart.findOrCreateCart(employeeId);
+
+    // We perform an explicit JOIN here to make sure stall_id is never 0
+    const query = `
+    SELECT 
+      ci.*, 
+      mi.item_name, 
+      mi.price, 
+      mi.item_image_url, 
+      mi.stall_id, 
+      s.stall_name
+    FROM cart_items ci
+    JOIN menu_items mi ON ci.item_id = mi.item_id
+    JOIN stalls s ON mi.stall_id = s.stall_id
+    WHERE ci.cart_id = $1
+  `;
+
+    const result = await pool.query(query, [cart.cart_id]);
+    return result.rows;
   }
+
 };
 
 export default Cart;

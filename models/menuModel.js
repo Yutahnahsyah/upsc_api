@@ -22,10 +22,9 @@ const Menu = {
     return result.rows[0];
   },
 
-  // Includes stall_name for specific stalls
   findByStall: async (stallId) => {
     const result = await pool.query(
-      `SELECT mi.*, s.stall_name 
+      `SELECT mi.*, s.stall_name, s.stall_id 
        FROM menu_items mi
        JOIN stalls s ON mi.stall_id = s.stall_id
        WHERE mi.stall_id = $1 
@@ -43,10 +42,9 @@ const Menu = {
     return result.rows[0];
   },
 
-  // Includes the stall_name for the general Food Section
   findAll: async () => {
     const result = await pool.query(
-      `SELECT mi.*, s.stall_name 
+      `SELECT mi.*, s.stall_name, s.stall_id
        FROM menu_items mi
        JOIN stalls s ON mi.stall_id = s.stall_id
        WHERE mi.is_available = true 
@@ -54,7 +52,7 @@ const Menu = {
     );
     return result.rows;
   },
-
+  
   update: async (id, updates) => {
     const keys = Object.keys(updates);
     const values = Object.values(updates);

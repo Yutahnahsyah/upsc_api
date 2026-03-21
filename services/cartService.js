@@ -40,7 +40,29 @@ export const addToCart = async (employeeId, itemData) => {
   return await Cart.addItem(cart.cart_id, item_id, quantity);
 };
 
+// ... existing imports
+
 export const viewCart = async (employeeId) => {
+  // Use the FIXED viewCart from your model that includes the JOIN for stall_id
+  return await Cart.viewCart(employeeId);
+};
+
+export const clearStall = async (employeeId, stallId) => {
   const cart = await Cart.findOrCreateCart(employeeId);
-  return await Cart.getDetails(cart.cart_id);
+  
+  // CRITICAL: Ensure stallId is a number. 
+  // If the app sends "0" as a string, PG might not match it correctly in the subquery.
+  const numericStallId = Number(stallId);
+  
+  const result = await Cart.clearCart(cart.cart_id, numericStallId);
+  
+  // Debugging: This will show in your server console if the query actually hit anything
+  console.log(`Clearing Stall ${numericStallId} for Cart ${cart.cart_id}. Rows affected: ${result.rowCount}`);
+  
+  return result;
+};
+
+// Add this so the controller can actually find the function
+export const removeFromCart = async (cartItemId) => {
+  return await Cart.removeItem(cartItemId);
 };

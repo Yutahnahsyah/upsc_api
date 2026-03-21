@@ -43,3 +43,17 @@ export const removeItem = async (req, res) => {
     res.status(500).json({ message: "Failed to remove item." });
   }
 };
+
+// This is already in your file, it just needed the service to exist!
+export const clearStallCart = async (req, res) => {
+  const { stallId } = req.params;
+  const employeeId = req.user.employee_id; 
+
+  try {
+    await cartService.clearStall(employeeId, stallId); // This now exists
+    res.status(200).json({ message: "Stall cart cleared successfully." });
+  } catch (error) {
+    console.error("Clear Stall Cart Error:", error);
+    res.status(500).json({ message: "Failed to clear stall cart." });
+  }
+};

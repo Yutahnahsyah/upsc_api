@@ -45,20 +45,33 @@ export const loginVendor = async (req, res) => {
   const { username, password } = req.body;
   try {
     const vendor = await adminService.fetchAdminByUsername(username);
+
+    // 1. Role Check
     if (!vendor || vendor.role !== 'vendor_admin') {
       return res.status(403).json({ message: 'Access denied. Vendor portal only.' });
     }
 
+    // 2. Active Status Check
+    if (!vendor.is_active) {
+      return res.status(403).json({ 
+        message: 'This account has been archived. Please contact the Head Admin for restoration.' 
+      });
+    }
+
+    // 3. Password Check
     const isMatch = await bcrypt.compare(password, vendor.password_hash);
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
 
+    // 4. Token Generation
     const token = jwt.sign(
       { admin_id: vendor.admin_id, role: vendor.role, stall_id: vendor.stall_id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
+
     res.json({ message: "Login Successful", token, stall_id: vendor.stall_id });
   } catch (error) {
+    console.error("Vendor Login Error:", error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

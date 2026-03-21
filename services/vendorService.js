@@ -1,6 +1,6 @@
 import Vendor from '../models/vendorModel.js';
 import bcrypt from 'bcrypt';
-import db from '../config/db.js'; 
+import db from '../config/db.js';
 
 export const registerVendor = async (stall_id, full_name, username, password) => {
   const nameRegex = /^[A-Za-z\s]+$/;
@@ -41,7 +41,7 @@ export const getVendorProfile = async (adminId) => {
 export const getVendorDashboardStats = async (stallId) => {
   // 1. Fetch the counts (Sales, Pending, etc.)
   const [sales, pending, completed, items] = await Vendor.getVendorDashboardCounts(stallId);
-  
+
   // 2. Fetch the top selling items
   const topItems = await Vendor.getTopSellingItems(stallId);
 
@@ -84,7 +84,7 @@ export const getRecentActivity = async (stallId) => {
     LIMIT 10;
   `;
 
-  const result = await db.query(query, [stallId]); 
+  const result = await db.query(query, [stallId]);
   return result.rows;
 };
 
@@ -92,6 +92,48 @@ export const fetchVendors = async () => {
   return await Vendor.findAllWithStalls();
 };
 
-export const deleteVendor = async (admin_id) => {
-  return await Vendor.remove(admin_id);
+export const archiveVendor = async (admin_id) => {
+  // We set is_active to false to "Archive"
+  return await Vendor.updateStatus(admin_id, false);
+};
+
+export const reactivateVendor = async (admin_id) => {
+  return await Vendor.updateStatus(admin_id, true);
+};
+
+export const resetVendorPassword = async (adminId, newPassword) => {
+  // Reuse your validation logic
+  const hasWhitespace = /\s/.test(newPassword);
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error("PASSWORD_LENGTH");
+  }
+  if (hasWhitespace) {
+    throw new Error("PASSWORD_WHITESPACE");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  return await Vendor.updatePassword(adminId, hashedPassword);
+};
+
+export const updateVendor = async (adminId, updateData) => {
+  const { full_name, username, stall_id } = updateData;
+
+  // 1. Validate Name (same regex as registration)
+  const nameRegex = /^[A-Za-z\s]+$/;
+  if (!full_name || !nameRegex.test(full_name)) {
+    throw new Error("INVALID_NAME");
+  }
+
+  // 2. Perform Update
+  const updatedVendor = await Vendor.update(adminId, {
+    full_name,
+    username,
+    stall_id
+  });
+
+  if (!updatedVendor) {
+    throw new Error("VENDOR_NOT_FOUND");
+  }
+
+  return updatedVendor;
 };

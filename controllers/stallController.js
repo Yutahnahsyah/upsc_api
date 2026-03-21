@@ -92,3 +92,45 @@ export const getFoodsByStall = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+export const updateStallProfile = async (req, res) => {
+  try {
+    const { id } = req.params; 
+    const { stall_name, location } = req.body;
+
+    // Prepare the update object
+    const updates = {};
+    if (stall_name) updates.stall_name = stall_name;
+    if (location) updates.location = location;
+
+    // ADDED: Check if a new image was uploaded
+    if (req.file) {
+      // Save the path provided by your fileUpload utility
+      updates.stall_image_url = `/uploads/${req.file.filename}`;
+    }
+
+    const updated = await stallService.updateStallInfo(id, updates);
+    
+    res.status(200).json({
+      message: `Stall "${updated.stall_name}" updated successfully`,
+      stall: updated
+    });
+  } catch (error) {
+    if (error.message === "DUPLICATE_STALL_NAME") {
+      return res.status(400).json({ message: "That stall name is already in use." });
+    }
+    console.error("Upload Error:", error);
+    res.status(500).json({ message: "Update failed: Internal server error" });
+  }
+};
+
+export const getStallDetails = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const stall = await stallService.getStallById(id);
+    if (!stall) return res.status(404).json({ message: "Stall not found" });
+    res.status(200).json(stall);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching stall details" });
+  }
+};
