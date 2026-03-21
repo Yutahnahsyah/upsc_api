@@ -46,23 +46,30 @@ export const loginVendor = async (req, res) => {
   try {
     const vendor = await adminService.fetchAdminByUsername(username);
 
-    // 1. Role Check
-    if (!vendor || vendor.role !== 'vendor_admin') {
+    // 1. User Existence Check
+    if (!vendor) {
+      return res.status(401).json({ message: 'Invalid Credentials' });
+    }
+
+    // 2. Role Check (Only if user exists)
+    if (vendor.role !== 'vendor_admin') {
       return res.status(403).json({ message: 'Access denied. Vendor portal only.' });
     }
 
-    // 2. Active Status Check
+    // 3. Active Status Check
     if (!vendor.is_active) {
       return res.status(403).json({ 
         message: 'This account has been archived. Please contact the Head Admin for restoration.' 
       });
     }
 
-    // 3. Password Check
+    // 4. Password Check
     const isMatch = await bcrypt.compare(password, vendor.password_hash);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid Credentials' });
+    }
 
-    // 4. Token Generation
+    // 5. Token Generation
     const token = jwt.sign(
       { admin_id: vendor.admin_id, role: vendor.role, stall_id: vendor.stall_id },
       JWT_SECRET,
