@@ -20,8 +20,7 @@ const User = {
 
   findByEmail: async (email) => {
     const result = await pool.query(
-      'SELECT employee_id, full_name, email, password_hash, department FROM users WHERE email = $1',
-      [email]
+      'SELECT employee_id, full_name, email, password_hash, department, is_active FROM users WHERE email = $1', [email]
     );
     return result.rows[0];
   },

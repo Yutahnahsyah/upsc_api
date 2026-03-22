@@ -1,84 +1,31 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import * as userService from '../services/userService.js';
-import * as adminService from '../services/adminService.js';
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import * as authService from '../services/authService.js';
 
 export const loginUser = async (req, res) => {
-  console.log("Login Attempt Body:", req.body);
   const { email, password } = req.body;
   try {
-    const user = await userService.fetchUserByEmail(email);
-    console.log("DB User Object:", user);
-    if (!user) return res.status(400).json({ message: 'Invalid Credentials' });
-
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
-
-    const token = jwt.sign({ employee_id: user.employee_id }, JWT_SECRET);
-    res.json({ message: "Login Successful", token });
+    const result = await authService.authenticateUser(email, password);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(error.status || 500).json({ message: error.message || 'Internal Server Error' });
   }
 };
 
 export const loginAdmin = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const admin = await adminService.fetchAdminByUsername(username);
-    if (!admin || admin.role !== 'head_admin') {
-      return res.status(403).json({ message: 'Access Denied: High-level privileges required.' });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password_hash);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
-
-    const token = jwt.sign({ admin_id: admin.admin_id, role: admin.role }, JWT_SECRET, { expiresIn: '12h' });
-    res.json({ message: "Login Successful", token, role: admin.role });
+    const result = await authService.authenticateAdmin(username, password);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(error.status || 500).json({ message: error.message || 'Internal Server Error' });
   }
 };
 
 export const loginVendor = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const vendor = await adminService.fetchAdminByUsername(username);
-
-    // 1. User Existence Check
-    if (!vendor) {
-      return res.status(401).json({ message: 'Invalid Credentials' });
-    }
-
-    // 2. Role Check (Only if user exists)
-    if (vendor.role !== 'vendor_admin') {
-      return res.status(403).json({ message: 'Access denied. Vendor portal only.' });
-    }
-
-    // 3. Active Status Check
-    if (!vendor.is_active) {
-      return res.status(403).json({ 
-        message: 'This account has been archived. Please contact the Head Admin for restoration.' 
-      });
-    }
-
-    // 4. Password Check
-    const isMatch = await bcrypt.compare(password, vendor.password_hash);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid Credentials' });
-    }
-
-    // 5. Token Generation
-    const token = jwt.sign(
-      { admin_id: vendor.admin_id, role: vendor.role, stall_id: vendor.stall_id },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({ message: "Login Successful", token, stall_id: vendor.stall_id });
+    const result = await authService.authenticateVendor(username, password);
+    res.json(result);
   } catch (error) {
-    console.error("Vendor Login Error:", error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(error.status || 500).json({ message: error.message || 'Internal Server Error' });
   }
 };

@@ -13,6 +13,18 @@ export const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
 
+    if (req.user.employee_id) {
+      const result = await pool.query(
+        'SELECT is_active FROM users WHERE employee_id = $1',
+        [req.user.employee_id]
+      );
+      const user = result.rows[0];
+
+      if (!user || !user.is_active) {
+        return res.status(403).json({ message: 'Account archived. Session terminated.' });
+      }
+    }
+
     if (req.user.role === 'vendor_admin') {
       const result = await pool.query(
         'SELECT is_active, stall_id FROM admins WHERE admin_id = $1',
@@ -28,9 +40,11 @@ export const authenticateToken = async (req, res, next) => {
         return res.status(401).json({ message: 'Stall reassignment detected. Log in again.' });
       }
     }
+
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError') return res.status(403).json({ message: 'Invalid Token' });
+    if (err.name === 'TokenExpiredError') return res.status(403).json({ message: 'Token expired. Please log in again.' });
     console.error("Middleware Error:", err);
     return res.status(500).json({ message: 'Internal Server Error' });
   }

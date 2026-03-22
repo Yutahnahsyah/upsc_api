@@ -1,11 +1,11 @@
 import pool from '../config/db.js';
 
 const Admin = {
-  create: async (full_name, username, password_hash) => {
+  create: async (full_name, username, password_hash, role = 'head_admin') => {
     const result = await pool.query(
-      `INSERT INTO admins (full_name, username, password_hash, role) 
-       VALUES ($1, $2, $3, 'head_admin') RETURNING *`,
-      [full_name, username, password_hash]
+      `INSERT INTO admins (full_name, username, password_hash, role)
+     VALUES ($1, $2, $3, $4) RETURNING *`,
+      [full_name, username, password_hash, role]
     );
     return result.rows[0];
   },
@@ -15,7 +15,6 @@ const Admin = {
     return result.rows[0];
   },
 
-  // Runs the parallel queries and returns the raw counts
   getCounts: async () => {
     return await Promise.all([
       pool.query('SELECT COUNT(*) AS total FROM users'),

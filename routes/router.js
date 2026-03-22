@@ -13,8 +13,9 @@ import * as cartController from '../controllers/cartController.js';
 
 const router = express.Router();
 
-// Logging middleware to help you debug requests from the Android app
 router.use((req, res, next) => {
+  if (req.method === 'GET' && req.url === '/getUser') return next();
+  
   const time = new Date().toLocaleTimeString();
   const method = req.method;
   const url = req.url;
