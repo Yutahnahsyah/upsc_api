@@ -1,7 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import * as userService from './userService.js';
 import * as adminService from './adminService.js';
+import { sendOtp } from '../config/mailer.js';
+import { saveOtp, verifyOtp } from '../utils/otpStore.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -46,4 +49,41 @@ export const authenticateVendor = async (username, password) => {
     { expiresIn: '24h' }
   );
   return { message: 'Login Successful', token, stall_id: vendor.stall_id };
+};
+
+export const requestPasswordReset = async (email) => {
+  const user = await userService.fetchUserByEmail(email);
+  if (!user) throw { status: 404, message: 'Email not found' };
+  if (!user.is_active) throw { status: 403, message: 'Account is archived. Contact the administrator.' };
+
+  const otp = crypto.randomInt(100000, 999999).toString();
+  saveOtp(email, otp);
+  await sendOtp(email, otp);
+};
+
+export const verifyPasswordOtp = (email, otp) => {
+  const valid = verifyOtp(email, otp);
+  if (!valid) throw { status: 400, message: 'Invalid or expired OTP' };
+
+  const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '10m' });
+  return { resetToken };
+};
+
+export const resetUserPassword = async (resetToken, newPassword) => {
+  let email;
+  try {
+    ({ email } = jwt.verify(resetToken, JWT_SECRET));
+  } catch {
+    throw { status: 400, message: 'Invalid or expired reset token' };
+  }
+
+  const user = await userService.fetchUserByEmail(email);
+  if (!user) throw { status: 404, message: 'User not found' };
+
+  const isSamePassword = await bcrypt.compare(newPassword, user.password_hash);
+  if (isSamePassword) throw { status: 400, message: 'New password must be different from your current password' };
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await userService.updateUserPassword(email, hashed);
+  return { message: 'Password reset successful' };
 };

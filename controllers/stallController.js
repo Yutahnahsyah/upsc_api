@@ -3,10 +3,8 @@ import pool from '../config/db.js';
 
 export const createStall = async (req, res) => {
   const { stall_name, location } = req.body;
-
   try {
     const stall = await stallService.createNewStall(stall_name, location);
-
     res.status(201).json({
       message: `Stall "${stall_name}" created successfully!`,
       stall
@@ -30,18 +28,35 @@ export const getAllStalls = async (req, res) => {
   }
 };
 
-export const updateStallStatus = async (req, res) => {
+export const updateStallActiveStatus = async (req, res) => {
   const { stall_id, is_active } = req.body;
   try {
-    const updated = await stallService.updateStallStatus(stall_id, is_active);
+    const updated = await stallService.updateStallActiveStatus(stall_id, is_active);
     if (!updated) return res.status(404).json({ message: `Stall #${stall_id} not found` });
 
-    const statusText = is_active ? 'Restored' : 'Archived';  // 👈 changed
+    const statusText = is_active ? 'Restored' : 'Archived';
     res.status(200).json({
-      message: `Stall "${updated.stall_name}" has been ${statusText}`,  // 👈 changed
+      message: `Stall "${updated.stall_name}" has been ${statusText}`,
       stall: updated
     });
   } catch (error) {
+    res.status(500).json({ message: 'Update failed: Internal server error' });
+  }
+};
+
+export const updateStallOpenStatus = async (req, res) => {
+  const { stall_id, is_open } = req.body;
+  try {
+    const updated = await stallService.updateStallOpenStatus(stall_id, is_open);
+    const statusText = is_open ? 'Open' : 'Closed';
+    res.status(200).json({
+      message: `Stall "${updated.stall_name}" is now ${statusText}`,
+      stall: updated
+    });
+  } catch (error) {
+    if (error.message === "STALL_NOT_FOUND") {
+      return res.status(404).json({ message: `Stall #${stall_id} not found` });
+    }
     res.status(500).json({ message: 'Update failed: Internal server error' });
   }
 };
@@ -51,7 +66,6 @@ export const deleteStall = async (req, res) => {
   try {
     const deleted = await stallService.deleteStall(stall_id);
     if (!deleted) return res.status(404).json({ message: "Stall not found" });
-
     res.status(200).json({
       message: `Stall #${stall_id} removed from directory`,
       stall: deleted
@@ -74,24 +88,24 @@ export const getActiveStalls = async (req, res) => {
 };
 
 export const getFoodsByStall = async (req, res) => {
-    const { id } = req.params; 
-    try {
-        const query = `
-            SELECT * FROM menu_items 
-            WHERE stall_id = $1 
-            AND is_available = true
-        `;
-        const result = await pool.query(query, [id]);
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error fetching menu items:', err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT * FROM menu_items 
+      WHERE stall_id = $1 
+      AND is_available = true
+    `;
+    const result = await pool.query(query, [id]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching menu items:', err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 export const updateStallProfile = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const { stall_name, location } = req.body;
 
     const updates = {};
@@ -103,7 +117,6 @@ export const updateStallProfile = async (req, res) => {
     }
 
     const updated = await stallService.updateStallInfo(id, updates);
-    
     res.status(200).json({
       message: `Stall "${updated.stall_name}" updated successfully`,
       stall: updated
@@ -125,5 +138,39 @@ export const getStallDetails = async (req, res) => {
     res.status(200).json(stall);
   } catch (error) {
     res.status(500).json({ message: "Error fetching stall details" });
+  }
+};
+
+export const getStallDashboard = async (req, res) => {
+  const stallId = req.user.stall_id;
+
+  if (!stallId) {
+    return res.status(403).json({
+      message: "Access Denied: You do not have an assigned stall."
+    });
+  }
+
+  try {
+    const stats = await stallService.getStallDashboardStats(stallId);
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Dashboard Fetch Error:", error);
+    res.status(500).json({ message: "Failed to load dashboard statistics." });
+  }
+};
+
+export const getStallStats = async (req, res) => {
+  const stallId = req.user.stall_id;
+
+  if (!stallId) {
+    return res.status(403).json({ message: "Access Denied: You do not have an assigned stall." });
+  }
+
+  try {
+    const stats = await stallService.getStallOverallStats(stallId);
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error("Stats Fetch Error:", error);
+    res.status(500).json({ message: "Failed to load stall statistics." });
   }
 };

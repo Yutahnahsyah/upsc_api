@@ -10,6 +10,17 @@ export const createOrderFromCart = async (employeeId, orderData) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Check stall is active and open before allowing order
+    const stallCheck = await client.query(
+      'SELECT is_active, is_open FROM stalls WHERE stall_id = $1',
+      [orderData.stall_id]
+    );
+    const stall = stallCheck.rows[0];
+    if (!stall) throw { status: 404, message: 'Stall not found' };
+    if (!stall.is_active) throw { status: 403, message: 'This stall is no longer available' };
+    if (!stall.is_open) throw { status: 403, message: 'This stall is currently closed' };
+
     const cartRes = await client.query(`
       SELECT ci.*, mi.item_name, mi.price, s.stall_name
       FROM cart_items ci

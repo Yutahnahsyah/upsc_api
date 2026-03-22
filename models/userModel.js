@@ -12,7 +12,7 @@ const User = {
 
   findById: async (id) => {
     const result = await pool.query(
-      'SELECT employee_id, full_name, email, department, profile_picture_url FROM users WHERE employee_id = $1',
+      'SELECT employee_id, full_name, email, department, profile_picture_url, fcm_token FROM users WHERE employee_id = $1',
       [id]
     );
     return result.rows[0];

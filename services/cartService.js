@@ -66,3 +66,7 @@ export const clearStall = async (employeeId, stallId) => {
 export const removeFromCart = async (cartItemId) => {
   return await Cart.removeItem(cartItemId);
 };
+
+export const updateItem = async (cartItemId, quantity) => {
+  return await Cart.updateItem(cartItemId, quantity);
+};

@@ -63,7 +63,22 @@ export const deleteUser = async (id) => await User.remove(id);
 export const toggleUserArchive = async (id, currentStatus) => {
   const newStatus = !currentStatus;
   const updatedUser = await User.updateStatus(id, newStatus);
-  
+
   if (!updatedUser) throw { status: 404, message: 'User not found' };
   return updatedUser;
+};
+
+export const updateUserPassword = async (email, hashedPassword) => {
+  const sql = `UPDATE users SET password_hash = $1 WHERE email = $2 RETURNING employee_id`;
+  const updated = await User.update(sql, [hashedPassword, email]);
+  if (!updated) throw { status: 404, message: 'User not found' };
+};
+
+export const updateFcmToken = async (userId, fcmToken) => {
+    const sql = `UPDATE users SET fcm_token = $1 WHERE employee_id = $2`;
+    await User.update(sql, [fcmToken, userId]);
+};
+
+export const fetchUserById = async (id) => {
+  return await User.findById(id);
 };

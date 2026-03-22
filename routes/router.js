@@ -14,14 +14,23 @@ import * as cartController from '../controllers/cartController.js';
 const router = express.Router();
 
 router.use((req, res, next) => {
-  if (req.method === 'GET' && req.url === '/getUser') return next();
+  const silentRoutes = [
+    '/stalls/active',
+    '/allMenuItems',
+    '/getUser',
+    '/stallMenu/',
+    '/myCart'
+  ];
+
+  const isSilent = silentRoutes.some(route => req.url.startsWith(route));
+  if (isSilent || (req.method === 'GET' && req.url === '/getUser')) return next();
 
   const time = new Date().toLocaleTimeString();
   const method = req.method;
   const url = req.url;
 
   console.log(`\n==================== [${time}] ${method} ${url} ====================`);
-  
+
   if (req.body && Object.keys(req.body).length > 0) {
     console.log("Body:", JSON.stringify(req.body, null, 2));
   } else if (method !== 'GET') {
@@ -35,6 +44,9 @@ router.use((req, res, next) => {
 router.post('/loginUser', authController.loginUser);
 router.post('/loginAdmin', authController.loginAdmin);
 router.post('/loginVendor', authController.loginVendor);
+router.post('/forgotPassword', authController.forgotPassword);
+router.post('/verifyOtp', authController.verifyOtp);
+router.post('/resetPassword', authController.resetPassword);
 
 // ===================== USER ROUTES =====================
 router.post('/registerUser', userController.registerUser);
@@ -44,17 +56,22 @@ router.put('/editUser', authenticateToken, userController.editUserProfile);
 router.post('/uploadProfilePic', authenticateToken, upload.single('image'), userController.updateProfilePicture);
 router.delete('/deleteUser', authenticateToken, userController.deleteUser);
 router.patch('/archiveUser', authenticateToken, userController.archiveUser);
+router.post('/saveFcmToken', authenticateToken, userController.saveFcmToken);
 
 // ===================== STALL ROUTES =====================
 router.post('/createStall', authenticateToken, stallController.createStall);
 router.get('/allStalls', authenticateToken, stallController.getAllStalls);
-router.patch('/updateStallStatus', authenticateToken, stallController.updateStallStatus);
+router.patch('/updateStallActiveStatus', authenticateToken, stallController.updateStallActiveStatus);
+router.patch('/updateStallStatus', authenticateToken, stallController.updateStallActiveStatus); // ← ADD alias
+router.patch('/updateStallOpenStatus', authenticateToken, stallController.updateStallOpenStatus);
 router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
 router.get('/stalls', stallController.getAllStalls);
 router.get('/stalls/active', stallController.getActiveStalls);
 router.get('/stallMenu/:stallId', menuController.getStallMenu);
 router.patch('/stalls/update/:id', authenticateToken, upload.single('image'), stallController.updateStallProfile);
 router.put('/updateStallProfile/:id', authenticateToken, stallController.updateStallProfile);
+router.get('/vendorDashboard', authenticateToken, stallController.getStallDashboard);
+router.get('/stallStats', authenticateToken, stallController.getStallStats);
 
 // ===================== MENU ROUTES =====================
 router.get('/stalls/:stallId/foods', menuController.getStallMenu);
@@ -66,8 +83,10 @@ router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuIte
 // ===================== CART ROUTES =====================
 router.get('/myCart', authenticateToken, cartController.getUserCart);
 router.post('/addToCart', authenticateToken, cartController.addItemToCart);
-router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.removeItem);
+router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.removeCartItem);
 router.delete('/clearStallCart/:stallId', authenticateToken, cartController.clearStallCart);
+router.put('/updateCartItem/:cartItemId', authenticateToken, cartController.updateCartItem);
+router.get('/validateCart', authenticateToken, cartController.validateCart);
 
 // ===================== ORDER ROUTES =====================
 router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
@@ -80,7 +99,6 @@ router.post('/registerVendor', authenticateToken, vendorController.registerVendo
 router.get('/allVendors', authenticateToken, vendorController.getAllVendors);
 router.delete('/archiveVendor', authenticateToken, vendorController.archiveVendor);
 router.get('/vendorStall', authenticateToken, vendorController.getVendorStall);
-router.get('/vendorDashboard', authenticateToken, vendorController.getVendorDashboard);
 router.patch('/changeVendorPassword', authenticateToken, vendorController.changeVendorPassword);
 router.put('/updateVendor/:admin_id', authenticateToken, vendorController.updateVendor);
 router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor);

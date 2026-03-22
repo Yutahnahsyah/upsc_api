@@ -92,24 +92,6 @@ export const archiveVendor = async (req, res) => {
   }
 };
 
-export const getVendorDashboard = async (req, res) => {
-  const stallId = req.user.stall_id;
-
-  if (!stallId) {
-    return res.status(403).json({
-      message: "Access Denied: You do not have an assigned stall."
-    });
-  }
-
-  try {
-    const stats = await vendorService.getVendorDashboardStats(stallId);
-    res.status(200).json(stats);
-  } catch (error) {
-    console.error("Dashboard Fetch Error:", error);
-    res.status(500).json({ message: "Failed to load dashboard statistics." });
-  }
-};
-
 export const changeVendorPassword = async (req, res) => {
   const { admin_id, new_password } = req.body;
 

@@ -1,6 +1,5 @@
 import Vendor from '../models/vendorModel.js';
 import bcrypt from 'bcrypt';
-import db from '../config/db.js';
 
 export const registerVendor = async (stall_id, full_name, username, password) => {
   const nameRegex = /^[A-Za-z\s]+$/;
@@ -36,56 +35,6 @@ export const getVendorProfile = async (adminId) => {
     throw new Error("VENDOR_NOT_FOUND");
   }
   return vendor;
-};
-
-export const getVendorDashboardStats = async (stallId) => {
-  // 1. Fetch the counts (Sales, Pending, etc.)
-  const [sales, pending, completed, items] = await Vendor.getVendorDashboardCounts(stallId);
-
-  // 2. Fetch the top selling items
-  const topItems = await Vendor.getTopSellingItems(stallId);
-
-  // 3. Fetch the recent activity
-  const activity = await getRecentActivity(stallId);
-
-  return {
-    totalSales: parseFloat(sales.rows[0]?.total) || 0,
-    pendingOrders: parseInt(pending.rows[0]?.total) || 0,
-    completedOrders: parseInt(completed.rows[0]?.total) || 0,
-    activeItems: parseInt(items.rows[0]?.total) || 0,
-    topSellingItems: topItems,
-    recentActivity: activity
-  };
-};
-
-export const getRecentActivity = async (stallId) => {
-  const query = `
-    (SELECT 
-        o.order_id as id, 
-        'New Order #' || o.order_id || ' received from ' || u.full_name as message, 
-        'new_order' as type, 
-        o.order_time as created_at
-    FROM orders o
-    JOIN users u ON o.employee_id = u.employee_id 
-    WHERE o.stall_id = $1)
-    
-    UNION ALL
-    
-    (SELECT 
-        order_id as id, 
-        -- FIX: Cast 'status' to TEXT so REPLACE can process it
-        'Order #' || order_id || ' status updated to ' || REPLACE(status::TEXT, '_', ' ') as message, 
-        'status_change' as type, 
-        order_time as created_at
-    FROM orders 
-    WHERE stall_id = $1 AND status != 'pending')
-    
-    ORDER BY created_at DESC
-    LIMIT 10;
-  `;
-
-  const result = await db.query(query, [stallId]);
-  return result.rows;
 };
 
 export const fetchVendors = async () => {

@@ -110,3 +110,16 @@ export const archiveUser = async (req, res) => {
     res.status(error.status || 500).json({ message: error.message || 'Internal Server Error' });
   }
 };
+
+export const saveFcmToken = async (req, res) => {
+    const { fcm_token } = req.body;
+    const userId = req.user.employee_id;
+    console.log('saveFcmToken called:', { userId, fcm_token }); // ← ADD THIS
+    try {
+        await userService.updateFcmToken(userId, fcm_token);
+        res.json({ message: 'FCM token saved' });
+    } catch (error) {
+        console.error('saveFcmToken error:', error.message); // ← ADD THIS
+        res.status(500).json({ message: error.message });
+    }
+};
