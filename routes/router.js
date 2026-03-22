@@ -15,13 +15,13 @@ const router = express.Router();
 
 router.use((req, res, next) => {
   if (req.method === 'GET' && req.url === '/getUser') return next();
-  
+
   const time = new Date().toLocaleTimeString();
   const method = req.method;
   const url = req.url;
 
-  console.log(`\n--- [${time}] ${method} ${url} ---`);
-
+  console.log(`\n==================== [${time}] ${method} ${url} ====================`);
+  
   if (req.body && Object.keys(req.body).length > 0) {
     console.log("Body:", JSON.stringify(req.body, null, 2));
   } else if (method !== 'GET') {
