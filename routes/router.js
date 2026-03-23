@@ -1,4 +1,4 @@
-  import express from 'express';
+import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import { upload } from '../utils/fileUpload.js';
 
@@ -10,6 +10,7 @@ import * as adminController from '../controllers/adminController.js';
 import * as menuController from '../controllers/menuController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as cartController from '../controllers/cartController.js';
+import * as notificationController from '../controllers/notificationController.js';
 
 const router = express.Router();
 
@@ -62,7 +63,7 @@ router.post('/saveFcmToken', authenticateToken, userController.saveFcmToken);
 router.post('/createStall', authenticateToken, stallController.createStall);
 router.get('/allStalls', authenticateToken, stallController.getAllStalls);
 router.patch('/updateStallActiveStatus', authenticateToken, stallController.updateStallActiveStatus);
-router.patch('/updateStallStatus', authenticateToken, stallController.updateStallActiveStatus); // ← ADD alias
+router.patch('/updateStallStatus', authenticateToken, stallController.updateStallActiveStatus);
 router.patch('/updateStallOpenStatus', authenticateToken, stallController.updateStallOpenStatus);
 router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
 router.get('/stalls', stallController.getAllStalls);
@@ -93,6 +94,9 @@ router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
 router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
 router.post('/placeOrder', authenticateToken, orderController.placeOrder);
 router.get('/myOrders', authenticateToken, orderController.getUserOrders);
+
+// ===================== NOTIFICATION ROUTES =====================
+router.get('/notifications', authenticateToken, notificationController.getNotifications);
 
 // ==================== VENDOR ROUTES =====================
 router.post('/registerVendor', authenticateToken, vendorController.registerVendor);

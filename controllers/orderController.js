@@ -1,5 +1,6 @@
 import * as orderService from '../services/orderService.js';
 import * as userService from '../services/userService.js';
+import * as notificationService from '../services/notificationService.js';
 import { sendPushNotification } from '../config/firebase.js';
 
 export const placeOrder = async (req, res) => {
@@ -76,14 +77,24 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     if (status === 'ready' && updatedOrder.employee_id) {
-      const user = await userService.fetchUserById(updatedOrder.employee_id);
-      console.log('User FCM token:', user?.fcm_token);
-      if (user?.fcm_token) {
-        await sendPushNotification(
-          user.fcm_token,
-          '🍽️ Order Ready!',
-          `Your order from ${updatedOrder.stall_name_snapshot} is ready for pickup!`
-        );
+      const notifTitle = '🍽️ Order Ready!';
+      const notifBody = `Your order from ${updatedOrder.stall_name_snapshot} is ready for pickup!`;
+
+      try {
+        await notificationService.saveNotification(updatedOrder.employee_id, notifTitle, notifBody);
+        console.log('✅ Notification saved for:', updatedOrder.employee_id);
+      } catch (err) {
+        console.error('❌ saveNotification failed:', err.message);
+      }
+
+      try {
+        const user = await userService.fetchUserById(updatedOrder.employee_id);
+        console.log('User FCM token:', user?.fcm_token);
+        if (user?.fcm_token) {
+          await sendPushNotification(user.fcm_token, notifTitle, notifBody);
+        }
+      } catch (err) {
+        console.error('❌ FCM failed:', err.message);
       }
     }
 
