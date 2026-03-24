@@ -42,7 +42,6 @@ export const fetchVendors = async () => {
 };
 
 export const archiveVendor = async (admin_id) => {
-  // We set is_active to false to "Archive"
   return await Vendor.updateStatus(admin_id, false);
 };
 
@@ -51,7 +50,6 @@ export const reactivateVendor = async (admin_id) => {
 };
 
 export const resetVendorPassword = async (adminId, newPassword) => {
-  // Reuse your validation logic
   const hasWhitespace = /\s/.test(newPassword);
   if (!newPassword || newPassword.length < 6) {
     throw new Error("PASSWORD_LENGTH");
@@ -67,13 +65,11 @@ export const resetVendorPassword = async (adminId, newPassword) => {
 export const updateVendor = async (adminId, updateData) => {
   const { full_name, username, stall_id } = updateData;
 
-  // 1. Validate Name (same regex as registration)
   const nameRegex = /^[A-Za-z\s]+$/;
   if (!full_name || !nameRegex.test(full_name)) {
     throw new Error("INVALID_NAME");
   }
 
-  // 2. Perform Update
   const updatedVendor = await Vendor.update(adminId, {
     full_name,
     username,

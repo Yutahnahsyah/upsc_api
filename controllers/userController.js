@@ -3,6 +3,8 @@ import * as userService from '../services/userService.js';
 export const registerUser = async (req, res) => {
   try {
     const user = await userService.registerUser(req.body);
+    
+    req.app.get('socketio').emit('user_data_changed');
 
     res.status(201).json({
       message: 'User Registered Successfully',
@@ -41,6 +43,8 @@ export const getUserProfile = async (req, res) => {
 export const editUserProfile = async (req, res) => {
   try {
     const updatedUser = await userService.editUser(req.user.employee_id, req.body);
+
+    req.app.get('socketio').emit('user_data_changed');
 
     res.status(200).json({
       message: 'Profile updated successfully',
@@ -88,6 +92,8 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    req.app.get('socketio').emit('user_data_changed');
+
     res.status(200).json({
       message: 'Deleted successfully',
       user: deletedUser
@@ -102,6 +108,8 @@ export const archiveUser = async (req, res) => {
     const { employee_id, is_active } = req.body;
     const updatedUser = await userService.toggleUserArchive(employee_id, is_active);
 
+    req.app.get('socketio').emit('user_data_changed');
+
     res.status(200).json({
       message: updatedUser.is_active ? 'User restored successfully' : 'User archived successfully',
       user: updatedUser
@@ -114,12 +122,12 @@ export const archiveUser = async (req, res) => {
 export const saveFcmToken = async (req, res) => {
     const { fcm_token } = req.body;
     const userId = req.user.employee_id;
-    console.log('saveFcmToken called:', { userId, fcm_token }); // ← ADD THIS
+    console.log('saveFcmToken called:', { userId, fcm_token });
     try {
         await userService.updateFcmToken(userId, fcm_token);
         res.json({ message: 'FCM token saved' });
     } catch (error) {
-        console.error('saveFcmToken error:', error.message); // ← ADD THIS
+        console.error('saveFcmToken error:', error.message);
         res.status(500).json({ message: error.message });
     }
 };

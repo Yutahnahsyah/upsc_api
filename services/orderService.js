@@ -11,7 +11,6 @@ export const createOrderFromCart = async (employeeId, orderData) => {
   try {
     await client.query('BEGIN');
 
-    // Check stall is active and open before allowing order
     const stallCheck = await client.query(
       'SELECT is_active, is_open FROM stalls WHERE stall_id = $1',
       [orderData.stall_id]

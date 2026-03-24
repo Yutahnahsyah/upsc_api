@@ -48,7 +48,6 @@ const Vendor = {
     return result.rows[0];
   },
 
-  // Add this to your Vendor object in vendorModel.js
   updatePassword: async (adminId, hashedPassword) => {
     const result = await pool.query(
       'UPDATE admins SET password_hash = $1 WHERE admin_id = $2 RETURNING admin_id, username',
@@ -57,7 +56,6 @@ const Vendor = {
     return result.rows[0];
   },
 
-  // Add this to the Vendor object in vendorModel.js
   update: async (adminId, data) => {
     const { full_name, username, stall_id } = data;
     const result = await pool.query(

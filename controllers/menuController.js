@@ -111,7 +111,6 @@ export const deleteMenuItem = async (req, res) => {
   }
 };
 
-// ===================== NEW FUNCTION FOR FOOD SECTION =====================
 export const getAllItems = async (req, res) => {
   try {
     const items = await menuService.getAllItems();

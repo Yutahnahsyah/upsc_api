@@ -24,7 +24,7 @@ const Menu = {
 
   findByStall: async (stallId) => {
     const result = await pool.query(
-      `SELECT mi.*, s.stall_name, s.stall_id 
+      `SELECT mi.*, s.stall_name, s.stall_id, s.is_open 
        FROM menu_items mi
        JOIN stalls s ON mi.stall_id = s.stall_id
        WHERE mi.stall_id = $1 
@@ -36,7 +36,10 @@ const Menu = {
 
   findById: async (id) => {
     const result = await pool.query(
-      'SELECT * FROM menu_items WHERE item_id = $1',
+      `SELECT mi.*, s.stall_name, s.is_open 
+       FROM menu_items mi
+       JOIN stalls s ON mi.stall_id = s.stall_id
+       WHERE mi.item_id = $1`,
       [id]
     );
     return result.rows[0];
@@ -44,15 +47,16 @@ const Menu = {
 
   findAll: async () => {
     const result = await pool.query(
-      `SELECT mi.*, s.stall_name, s.stall_id
-       FROM menu_items mi
-       JOIN stalls s ON mi.stall_id = s.stall_id
-       WHERE mi.is_available = true 
-       ORDER BY mi.item_name ASC`
+      `SELECT mi.*, s.stall_name, s.stall_id, s.is_open, s.is_active
+     FROM menu_items mi
+     JOIN stalls s ON mi.stall_id = s.stall_id
+     WHERE mi.is_available = true 
+       AND s.is_active = true  
+     ORDER BY mi.item_name ASC`
     );
     return result.rows;
   },
-  
+
   update: async (id, updates) => {
     const keys = Object.keys(updates);
     const values = Object.values(updates);

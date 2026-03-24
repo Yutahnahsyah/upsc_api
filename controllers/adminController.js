@@ -3,7 +3,6 @@ import * as adminService from '../services/adminService.js';
 export const registerAdmin = async (req, res) => {
   const { full_name, username, password } = req.body;
   try {
-    // Controller just calls the Service
     const adminData = await adminService.registerAdmin(full_name, username, password);
 
     res.status(201).json({
@@ -11,7 +10,6 @@ export const registerAdmin = async (req, res) => {
       admin: adminData
     });
   } catch (error) {
-    // Controller handles the HTTP specific error codes
     if (error.code === '23505') {
       return res.status(400).json({ message: 'Username already exists' });
     }

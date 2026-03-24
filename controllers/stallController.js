@@ -34,6 +34,8 @@ export const updateStallActiveStatus = async (req, res) => {
     const updated = await stallService.updateStallActiveStatus(stall_id, is_active);
     if (!updated) return res.status(404).json({ message: `Stall #${stall_id} not found` });
 
+    req.app.get('socketio').to(`stall_${stall_id}`).emit('stall_updated');
+
     const statusText = is_active ? 'Restored' : 'Archived';
     res.status(200).json({
       message: `Stall "${updated.stall_name}" has been ${statusText}`,
@@ -48,6 +50,9 @@ export const updateStallOpenStatus = async (req, res) => {
   const { stall_id, is_open } = req.body;
   try {
     const updated = await stallService.updateStallOpenStatus(stall_id, is_open);
+    
+    req.app.get('socketio').to(`stall_${stall_id}`).emit('stall_updated');
+
     const statusText = is_open ? 'Open' : 'Closed';
     res.status(200).json({
       message: `Stall "${updated.stall_name}" is now ${statusText}`,
@@ -66,6 +71,9 @@ export const deleteStall = async (req, res) => {
   try {
     const deleted = await stallService.deleteStall(stall_id);
     if (!deleted) return res.status(404).json({ message: "Stall not found" });
+
+    req.app.get('socketio').to(`stall_${stall_id}`).emit('stall_updated');
+
     res.status(200).json({
       message: `Stall #${stall_id} removed from directory`,
       stall: deleted
@@ -87,22 +95,6 @@ export const getActiveStalls = async (req, res) => {
   }
 };
 
-export const getFoodsByStall = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const query = `
-      SELECT * FROM menu_items 
-      WHERE stall_id = $1 
-      AND is_available = true
-    `;
-    const result = await pool.query(query, [id]);
-    res.status(200).json(result.rows);
-  } catch (err) {
-    console.error('Error fetching menu items:', err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
 export const updateStallProfile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,6 +109,9 @@ export const updateStallProfile = async (req, res) => {
     }
 
     const updated = await stallService.updateStallInfo(id, updates);
+
+    req.app.get('socketio').to(`stall_${id}`).emit('stall_updated');
+
     res.status(200).json({
       message: `Stall "${updated.stall_name}" updated successfully`,
       stall: updated

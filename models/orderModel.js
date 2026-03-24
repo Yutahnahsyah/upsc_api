@@ -1,7 +1,6 @@
 import pool from '../config/db.js';
 
 const Order = {
-  // Vendor View: Uses LEFT JOIN to ensure orders show even if user profile is missing
   findByStall: async (stallId) => {
     const result = await pool.query(`
     SELECT o.*, 

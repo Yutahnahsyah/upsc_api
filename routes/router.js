@@ -20,7 +20,8 @@ router.use((req, res, next) => {
     '/allMenuItems',
     '/getUser',
     '/stallMenu/',
-    '/myCart'
+    '/myCart',
+    '/myOrders'
   ];
 
   const isSilent = silentRoutes.some(route => req.url.startsWith(route));
@@ -59,24 +60,37 @@ router.delete('/deleteUser', authenticateToken, userController.deleteUser);
 router.patch('/archiveUser', authenticateToken, userController.archiveUser);
 router.post('/saveFcmToken', authenticateToken, userController.saveFcmToken);
 
+// ===================== VENDOR ROUTES =====================
+router.post('/registerVendor', authenticateToken, vendorController.registerVendor);
+router.get('/allVendors', authenticateToken, vendorController.getAllVendors);
+router.get('/vendorStall', authenticateToken, vendorController.getVendorStall);
+router.put('/updateVendor/:admin_id', authenticateToken, vendorController.updateVendor);
+router.patch('/changeVendorPassword', authenticateToken, vendorController.changeVendorPassword);
+router.delete('/archiveVendor', authenticateToken, vendorController.archiveVendor);
+router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor);
+
+// ===================== ADMIN ROUTES =====================
+router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);
+router.get('/adminDashboard', authenticateToken, adminController.getAdminDashboard);
+
 // ===================== STALL ROUTES =====================
-router.post('/createStall', authenticateToken, stallController.createStall);
+router.get('/stalls/active', stallController.getActiveStalls);
+router.get('/stalls', stallController.getAllStalls);
 router.get('/allStalls', authenticateToken, stallController.getAllStalls);
+router.post('/createStall', authenticateToken, stallController.createStall);
+router.patch('/stalls/update/:id', authenticateToken, upload.single('image'), stallController.updateStallProfile);
+router.put('/updateStallProfile/:id', authenticateToken, stallController.updateStallProfile);
 router.patch('/updateStallActiveStatus', authenticateToken, stallController.updateStallActiveStatus);
 router.patch('/updateStallStatus', authenticateToken, stallController.updateStallActiveStatus);
 router.patch('/updateStallOpenStatus', authenticateToken, stallController.updateStallOpenStatus);
 router.delete('/deleteStall', authenticateToken, stallController.deleteStall);
-router.get('/stalls', stallController.getAllStalls);
-router.get('/stalls/active', stallController.getActiveStalls);
-router.get('/stallMenu/:stallId', menuController.getStallMenu);
-router.patch('/stalls/update/:id', authenticateToken, upload.single('image'), stallController.updateStallProfile);
-router.put('/updateStallProfile/:id', authenticateToken, stallController.updateStallProfile);
 router.get('/vendorDashboard', authenticateToken, stallController.getStallDashboard);
 router.get('/stallStats', authenticateToken, stallController.getStallStats);
 
 // ===================== MENU ROUTES =====================
-router.get('/stalls/:stallId/foods', menuController.getStallMenu);
 router.get('/allMenuItems', menuController.getAllItems);
+router.get('/stalls/:stallId/foods', menuController.getStallMenu);
+router.get('/stallMenu/:stallId', menuController.getStallMenu);
 router.post('/addItem', authenticateToken, upload.single('image'), menuController.addItem);
 router.patch('/updateItem/:id', upload.single('image'), authenticateToken, menuController.updateMenuItem);
 router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuItem);
@@ -84,31 +98,18 @@ router.delete('/deleteItem/:id', authenticateToken, menuController.deleteMenuIte
 // ===================== CART ROUTES =====================
 router.get('/myCart', authenticateToken, cartController.getUserCart);
 router.post('/addToCart', authenticateToken, cartController.addItemToCart);
+router.put('/updateCartItem/:cartItemId', authenticateToken, cartController.updateCartItem);
 router.delete('/removeFromCart/:cartItemId', authenticateToken, cartController.removeCartItem);
 router.delete('/clearStallCart/:stallId', authenticateToken, cartController.clearStallCart);
-router.put('/updateCartItem/:cartItemId', authenticateToken, cartController.updateCartItem);
 router.get('/validateCart', authenticateToken, cartController.validateCart);
 
 // ===================== ORDER ROUTES =====================
-router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
-router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
 router.post('/placeOrder', authenticateToken, orderController.placeOrder);
 router.get('/myOrders', authenticateToken, orderController.getUserOrders);
+router.get('/vendorOrders', authenticateToken, orderController.getStallOrders);
+router.patch('/updateOrderStatus', authenticateToken, orderController.updateOrderStatus);
 
 // ===================== NOTIFICATION ROUTES =====================
 router.get('/notifications', authenticateToken, notificationController.getNotifications);
-
-// ==================== VENDOR ROUTES =====================
-router.post('/registerVendor', authenticateToken, vendorController.registerVendor);
-router.get('/allVendors', authenticateToken, vendorController.getAllVendors);
-router.delete('/archiveVendor', authenticateToken, vendorController.archiveVendor);
-router.get('/vendorStall', authenticateToken, vendorController.getVendorStall);
-router.patch('/changeVendorPassword', authenticateToken, vendorController.changeVendorPassword);
-router.put('/updateVendor/:admin_id', authenticateToken, vendorController.updateVendor);
-router.delete('/deleteVendor', authenticateToken, vendorController.deleteVendor);
-
-// ==================== ADMIN ROUTES =====================
-router.post('/registerAdmin', authenticateToken, adminController.registerAdmin);
-router.get('/adminDashboard', authenticateToken, adminController.getAdminDashboard);
 
 export default router;

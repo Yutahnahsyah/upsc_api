@@ -6,7 +6,6 @@ export const addItemToCart = async (req, res) => {
     const item = await cartService.addToCart(req.user.employee_id, req.body);
     res.status(201).json({ message: "Added to cart!", item });
   } catch (error) {
-    // Specific business logic errors
     if (error.message === "INSUFFICIENT_STOCK") {
       return res.status(400).json({ message: "Not enough stock available." });
     }
@@ -43,13 +42,12 @@ export const removeCartItem = async (req, res) => {
   }
 };
 
-// This is already in your file, it just needed the service to exist!
 export const clearStallCart = async (req, res) => {
   const { stallId } = req.params;
   const employeeId = req.user.employee_id; 
 
   try {
-    await cartService.clearStall(employeeId, stallId); // This now exists
+    await cartService.clearStall(employeeId, stallId);
     res.status(200).json({ message: "Stall cart cleared successfully." });
   } catch (error) {
     console.error("Clear Stall Cart Error:", error);
@@ -61,7 +59,7 @@ export const updateCartItem = async (req, res) => {
   try {
     const { cartItemId } = req.params;
     const { quantity } = req.body;
-    await cartService.updateItem(cartItemId, quantity);  // ✅ use cartService
+    await cartService.updateItem(cartItemId, quantity);
     res.status(200).json({ message: 'Quantity updated' });
   } catch (error) {
     console.error('updateCartItem error:', error);
@@ -77,7 +75,6 @@ export const validateCart = async (req, res) => {
       return res.status(200).json({ valid: true, unavailableItems: [], stallClosed: false, stallInactive: false });
     }
 
-    // Check stall status
     const stallId = items[0].stall_id;
     const stallRes = await pool.query('SELECT is_active, is_open FROM stalls WHERE stall_id = $1', [stallId]);
     const stall = stallRes.rows[0];
